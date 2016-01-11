@@ -1,0 +1,32 @@
+---
+
+repos:
+
+- name: project1
+  users:
+  - rayed
+  - mohammed
+
+- name: project2
+  users:
+  - rayed
+  - khaled
+
+users:
+
+- name: rayed
+  keys:
+  - "ssh-rsa AAAA....  rayed@host1"
+  - "ssh-rsa AAAA....  rayed@host2"
+
+- name: mohammed
+  keys:
+  - "ssh-rsa AAAA....  mohammed@host1"
+  - "ssh-rsa AAAA....  mohammed@host2"
+
+- name: khaled
+  keys:
+  - "ssh-rsa AAAA....  khaled@host1"
+  - "ssh-rsa AAAA....  khaled@host2"
+
+
