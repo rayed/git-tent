@@ -74,3 +74,9 @@ This will create two reposirtory "project1" and "project2", which can be accesse
 	git clone git@your_server:project1.git
 	
 
+# TODO 
+
+1. Add two levels of access, read-only, and read-write.
+2. Add groups
+
+
