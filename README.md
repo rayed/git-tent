@@ -10,6 +10,8 @@ Any unix machine (Linux, OSX, FreeBSD) with Python installed.
 
 	# Install required package (Python YAML module)
 	sudo pip install pyyaml
+    # ... on CentOS you can install from YUM
+    sudo yum install PyYAML
 
 	# add user named "git"
 	sudo adduser git
@@ -69,10 +71,25 @@ After editing the file you need to run:
 
 	sudo -u git ~git/git-tent/git-tent.py setup
 	
-This will create two reposirtory "project1" and "project2", which can be accessed from any other machine:
+This will create two reposirtory "project1" and "project2", which can be accessed from any other machine.
 
-	git clone git@your_server:project1.git
-	
+
+# Accessing the Repo
+
+Create a new repository on the command line:
+
+		echo "# test" >> README.md
+		git init
+		git add README.md
+		git commit -m "first commit"
+		git remote add origin git@your_server:project1.git
+		git push -u origin master
+
+OR push an existing repository from the command line:
+
+		git remote add origin git@your_server:project1.git
+		git push -u origin master
+
 
 # TODO 
 
@@ -80,3 +97,6 @@ This will create two reposirtory "project1" and "project2", which can be accesse
 2. Add groups
 
 
+# Hints
+
+You can access your public keys in github from the following URL (replace user with your account): <https://github.com/user.keys>
