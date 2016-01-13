@@ -8,67 +8,79 @@ Any unix machine (Linux, OSX, FreeBSD) with Python installed.
 
 ## Installation
 
-  # Install required package (Python YAML module)
-  sudo pip install pyyaml
-  # ... on CentOS you can install from YUM
-  sudo yum install PyYAML
+    # Install required package (Python YAML module)
+    # Choose one:
+    sudo apt-get install python-yaml  # Ubuntu, Debian
+    sudo yum install PyYAML           # CentOS, Fedora
+    sudo pip install pyyaml           # Using Python PIP
 
-  # add user named "git"
-  sudo adduser git
+    # add user named "git"
+    sudo adduser git
 
-  # create directory for "git-tent"
-  sudo -u git mkdir ~git/git-tent
+    # Switch to the new user
+    sudo su - git
+    
+    # Download and unpack package
+    wget https://github.com/rayed/git-tent/archive/master.zip
+    unzip master.zip
+    mv git-tent-master git-tent
+    cd git-tent
+    ./git-tent.py sample_config > git-tent-config.yaml
 
-  # copy "git-tent.py" and change owner and permision
-  sudo cp git-tent.py ~git/git-tent
-  sudo chown git:git ~git/git-tent/git-tent.py
-  sudo chmod +x ~git/git-tent/git-tent.py
+The application will over write the "authorized\_keys" file, DON'T USE in with your normal account.
 
-  # Create sample config
-  sudo -u git ~git/git-tent/git-tent.py sample_config > ~git/git-tent/git-tent-config.yaml
-  
+The applcaition default settings are:
+ 
+    settings:
+      user: git
+      home: /home/git
+      authorized_keys: /home/git/.ssh/authorized_keys
+      shell_file: /home/git/git-tent/git-tent.py
+      log_file: /home/git/git-tent/git-tent.log
+      repos_dir: /home/git/git-tent/repos/
+
+Copy and edit the previous section to your config as needed.
+
 
 ## Configuration
 
 git-tent is configured using a single YAML file "git-tent-config.yaml", the file have the following structure:
 
-  ---
+    ---
 
-  repos:
+    repos:
 
-  - name: project1
+    - name: project1
+        users:
+        - rayed
+        - mohammed
+
+    - name: project2
+        users: [rayed, khaled]
+
     users:
-    - rayed
-    - mohammed
 
-  - name: project2
-    users:
-    - rayed
-    - khaled
+    - name: rayed
+        keys:
+        - "ssh-rsa AAAA....    rayed@host1"
+        - "ssh-rsa AAAA....    rayed@host2"
 
-  users:
+    - name: mohammed
+        keys:
+        - "ssh-rsa AAAA....    mohammed@host1"
+        - "ssh-rsa AAAA....    mohammed@host2"
 
-  - name: rayed
-    keys:
-    - "ssh-rsa AAAA....  rayed@host1"
-    - "ssh-rsa AAAA....  rayed@host2"
-
-  - name: mohammed
-    keys:
-    - "ssh-rsa AAAA....  mohammed@host1"
-    - "ssh-rsa AAAA....  mohammed@host2"
-
-  - name: khaled
-    keys:
-    - "ssh-rsa AAAA....  khaled@host1"
-    - "ssh-rsa AAAA....  khaled@host2"
+    - name: khaled
+        keys:
+        - "ssh-rsa AAAA....    khaled@host1"
+        - "ssh-rsa AAAA....    khaled@host2"
 
 
 Edit the name of the reposirtoes you want to create, and add your PUBLIC keys (and other team members keys too).
 
 After editing the file you need to run:
 
-  sudo -u git ~git/git-tent/git-tent.py setup
+  ./git-tent.py setup
   
 This will create two reposirtory "project1" and "project2", which can be accessed from any other machine.
 
