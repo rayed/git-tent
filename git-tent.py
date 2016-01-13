@@ -37,18 +37,19 @@ def read_config():
         config_file = "/etc/git-tent-config.yaml"
     else:
         logger.error("No config file found!")
-        return False
+        sys.exit(1)
     try:
         with open(config_file) as f:
             config = yaml.load(f)
     except yaml.YAMLError, exc:
         logger.error("Couldn't parse config file:\n%s" % (exc))
-        return False
+        sys.exit(1)
     except:
         logger.exception("Couldn't parse config file")
-        return False
-    if "settings" not in config:
-        config["settings"] = {}
+        sys.exit(1)
+    if config == None:
+        config = {}
+    config["settings"] = config.get("settings", {})
     _s = config["settings"]
     _s["user"] = _s.get("user", "git")
     _s["home"] = _s.get("home", "/home/" + _s["user"])
@@ -157,16 +158,15 @@ def shell(config, user):
 
 
 def main():
-    config = read_config()
-    if config == False:
-        sys.exit(1)
     if len(sys.argv) == 3 and sys.argv[1] == 'shell': 
+        config = read_config()
         user = sys.argv[2]
         try:
             shell(config, user)
         except ShellException, e:
             report_error(e)
     elif len(sys.argv) == 2 and sys.argv[1] == 'setup':
+        config = read_config()
         logger.info("Setup")
         setup(config)
     elif len(sys.argv) == 2 and sys.argv[1] == 'sample_config':
