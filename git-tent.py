@@ -1,14 +1,12 @@
 #!/usr/bin/env python
 
+"""
+Git Tent
+Easily manage your Git server with support of multiple users with different
+access permissions
 
-GIT_TENT_HOME= "/home/git/git-tent/"
-AUTHORIZED_KEYS="/home/git/.ssh/authorized_keys"
-
-SHELL=GIT_TENT_HOME+"/git-tent.py"
-CONFIG_FILE=GIT_TENT_HOME+"/config.yaml"
-REPOS_DIR=GIT_TENT_HOME+"/repos"
-LOG_FILE=GIT_TENT_HOME+"/git-tent.log"
-
+Rayed Alrashed 13 Jan 2016
+"""
 
 import os
 import re
@@ -18,21 +16,51 @@ import logging
 import subprocess
 from pprint import pprint
 
+# Chdir to script own directory
+os.chdir(os.path.dirname(os.path.realpath(__file__)))
+
+# setup logging
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+# if called interactively log to console
 if os.isatty(sys.stdout.fileno()):
     handler = logging.StreamHandler()
-else:
-    handler = logging.FileHandler(LOG_FILE)
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-handler.setFormatter(formatter)
-handler.setLevel(logging.DEBUG)
-logger.setLevel(logging.DEBUG)
-logger.addHandler(handler)
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    handler.setFormatter(formatter)
+    handler.setLevel(logging.DEBUG)
+    logger.addHandler(handler)
 
 def read_config():
-    f = open(CONFIG_FILE)
-    config = yaml.load(f)
-    f.close()
+    if os.path.exists("git-tent-config.yaml"):
+        config_file = "git-tent-config.yaml"
+    elif os.path.exists("/etc/git-tent-config.yaml"):
+        config_file = "/etc/git-tent-config.yaml"
+    else:
+        logger.error("No config file found!")
+        return False
+    try:
+        with open(config_file) as f:
+            config = yaml.load(f)
+    except yaml.YAMLError, exc:
+        logger.error("Couldn't parse config file:\n%s" % (exc))
+        return False
+    except:
+        logger.exception("Couldn't parse config file")
+        return False
+    if "settings" not in config:
+        config["settings"] = {}
+    _s = config["settings"]
+    _s["user"] = _s.get("user", "git")
+    _s["home"] = _s.get("home", "/home/" + _s["user"])
+    _s["authorized_keys"] = _s.get("authorized_keys", _s["home"] + "/.ssh/authorized_keys")
+    _s["shell_file"] = _s.get("shell_file", _s["home"] + "/git-tent/git-tent.py")
+    _s["repos_dir"] = _s.get("repos_dir", _s["home"] + "/git-tent/repos/")
+    _s["log_file"] = _s.get("log_file", _s["home"] + "/git-tent/git-tent.log")
+    # set log handler for logfile
+    h = logging.FileHandler(_s["log_file"])
+    h.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+    h.setLevel(logging.DEBUG)
+    logger.addHandler(h)
     return config
 
 def sample_config():
@@ -71,17 +99,18 @@ users:
 
 def setup(config):
     # Build authorized_keys
-    f = open(AUTHORIZED_KEYS, "w")
+    f = open(config["settings"]["authorized_keys"], "w")
     for user in config['users']:
         logger.info("Adding [%s] keys " % (user['name']))
         for key in user['keys']:
-            f.write('command="%s shell %s" %s\n' % (SHELL, user['name'], key))
+            f.write('command="%s shell %s" %s\n' %
+                    (config["settings"]["shell_file"], user['name'], key))
     f.close()
-    os.chmod(AUTHORIZED_KEYS, 0644)
+    os.chmod(config["settings"]["authorized_keys"], 0644)
     # Build missing repos
     for repo in config['repos']:
         repo_name = repo['name'] + ".git"
-        repo_dir = os.path.join(REPOS_DIR, repo_name)
+        repo_dir = os.path.join(config["settings"]["repos_dir"], repo_name)
         if not os.path.isdir(repo_dir):
             subprocess.call(['git', 'init', '--bare', repo_dir])
 
@@ -120,7 +149,7 @@ def shell(config, user):
     if user not in repo['users']:
         raise ShellException("Not authorized to access this repo")
     repo_name = repo_name + ".git"
-    repo_dir = os.path.join(REPOS_DIR, repo_name)
+    repo_dir = os.path.join(config["settings"]["repos_dir"], repo_name)
     if not os.path.isdir(repo_dir):
         raise ShellException("Repo doesn't exist")
     #  run
@@ -129,6 +158,8 @@ def shell(config, user):
 
 def main():
     config = read_config()
+    if config == False:
+        sys.exit(1)
     if len(sys.argv) == 3 and sys.argv[1] == 'shell': 
         user = sys.argv[2]
         try:

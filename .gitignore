@@ -1,5 +1,5 @@
 *.swp
 *.pyc
-config.yaml
+git-tent-config.yaml
 git-tent.log
 repos/
