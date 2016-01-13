@@ -101,7 +101,7 @@ def shell(config, user):
     # command and repo are pased through SSH_ORIGINAL_COMMAND
     command = os.getenv('SSH_ORIGINAL_COMMAND', '')
     logger.debug('SSH_ORIGINAL_COMMAND:'+command)
-    regex = r"(git-upload-archive|git-upload-pack|git-receive-pack) '([\w-]+)\.git'"
+    regex = r"(git-upload-archive|git-upload-pack|git-receive-pack) '([\/\w-]+)\.git'"
     m = re.match(regex, command)
     if not m:
         raise ShellException('Sorry account for Git only')
