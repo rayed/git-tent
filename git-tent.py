@@ -57,6 +57,8 @@ def read_config():
     _s["shell_file"] = _s.get("shell_file", _s["home"] + "/git-tent/git-tent.py")
     _s["repos_dir"] = _s.get("repos_dir", _s["home"] + "/git-tent/repos/")
     _s["log_file"] = _s.get("log_file", _s["home"] + "/git-tent/git-tent.log")
+    if _s["repos_dir"][-1] != "/":
+        _s["repos_dir"] += "/"
     # set log handler for logfile
     h = logging.FileHandler(_s["log_file"])
     h.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
