@@ -20,15 +20,27 @@ from pprint import pprint
 os.chdir(os.path.dirname(os.path.realpath(__file__)))
 
 # setup logging
+class NullHandler(logging.Handler):
+    def emit(self, record):
+        pass
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-# if called interactively log to console
-if os.isatty(sys.stdout.fileno()):
-    handler = logging.StreamHandler()
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    handler.setFormatter(formatter)
-    handler.setLevel(logging.DEBUG)
-    logger.addHandler(handler)
+logger.addHandler(NullHandler())
+
+def setup_logging(config, console=True):
+    logger.setLevel(logging.DEBUG)
+    # if called interactively log to console
+    if console and os.isatty(sys.stdout.fileno()):
+        handler = logging.StreamHandler()
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        handler.setFormatter(formatter)
+        handler.setLevel(logging.DEBUG)
+        logger.addHandler(handler)
+    # set log handler for logfile
+    if "log_file" in config:
+        h = logging.FileHandler(config["log_file"])
+        h.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+        h.setLevel(logging.DEBUG)
+        logger.addHandler(h)
 
 def read_config():
     if os.path.exists("git-tent-config.yaml"):
@@ -59,11 +71,6 @@ def read_config():
     _s["log_file"] = _s.get("log_file", _s["home"] + "/git-tent/git-tent.log")
     if _s["repos_dir"][-1] != "/":
         _s["repos_dir"] += "/"
-    # set log handler for logfile
-    h = logging.FileHandler(_s["log_file"])
-    h.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
-    h.setLevel(logging.DEBUG)
-    logger.addHandler(h)
     return config
 
 def sample_config():
@@ -162,6 +169,7 @@ def shell(config, user):
 def main():
     if len(sys.argv) == 3 and sys.argv[1] == 'shell': 
         config = read_config()
+        setup_logging(config, False)
         user = sys.argv[2]
         try:
             shell(config, user)
@@ -169,12 +177,15 @@ def main():
             report_error(e)
     elif len(sys.argv) == 2 and sys.argv[1] == 'setup':
         config = read_config()
+        setup_logging(config)
         logger.info("Setup")
         setup(config)
     elif len(sys.argv) == 2 and sys.argv[1] == 'sample_config':
+        setup_logging({}, False)
         logger.setLevel(logging.ERROR)
         sample_config()
     else:
+        setup_logging({}, True)
         logger.error("Usage: %s (setup|sample_config)" % (sys.argv[0]))
         sys.exit(1)
 
